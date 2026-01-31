@@ -1,7 +1,5 @@
 package com.example.biblioteca.ui.Telas
 
-
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,22 +16,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.biblioteca.Model.BookModel
-
+import com.example.biblioteca.Database.BookDao
+import com.example.biblioteca.Database.toModel
+import com.example.biblioteca.Model.Book
+import com.example.biblioteca.ui.Telas.BookGrid// Import do seu componente de grid
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController, bookDao: BookDao) {
     var searchQuery by remember { mutableStateOf("") }
 
-    val mockBooks = listOf(
-        BookModel("Clean Code", "Robert C. Martin", "https://covers.openlibrary.org/b/id/9610926-L.jpg", "Um guia fundamental sobre código limpo."),
-        BookModel("The Pragmatic Programmer", "Andrew Hunt", "https://covers.openlibrary.org/b/id/10521213-L.jpg", "Dicas práticas para desenvolvedores."),
-        BookModel("Design Patterns", "Erich Gamma", "https://covers.openlibrary.org/b/id/8231996-L.jpg", "Soluções reutilizáveis para software."),
-        BookModel("Refactoring", "Martin Fowler", "https://covers.openlibrary.org/b/id/10435343-L.jpg", "Melhorando o design de códigos existentes."),
-        BookModel("Effective Java", "Joshua Bloch", "https://covers.openlibrary.org/b/id/10521234-L.jpg", "Melhores práticas para Java."),
-    )
+    val books by produceState<List<com.example.biblioteca.Model.Book>>(initialValue = emptyList()) {
+        try {
+            val entities = bookDao.getAllBooks()
+            value = entities.map { it.toModel() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
-    val filteredBooks = mockBooks.filter {
+    // Filtra a lista baseada no que vem do banco
+    val filteredBooks = books.filter {
         it.title.contains(searchQuery, ignoreCase = true) ||
                 it.author.contains(searchQuery, ignoreCase = true)
     }
@@ -42,19 +44,20 @@ fun HomeScreen(navController: NavController) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
+                    // Aqui você navegaria para a tela de criação que persistirá no Spring/Room
                     navController.navigate("reading_goals")
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Adicionar Meta")
+                Icon(Icons.Default.Add, contentDescription = "Adicionar Meta/Livro")
             }
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // Aplicamos o padding aqui
+                .padding(paddingValues)
                 .background(Color(0xFFF5F5F5))
         ) {
             Text(
@@ -65,13 +68,14 @@ fun HomeScreen(navController: NavController) {
                 modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
             )
 
+            // Campo de Pesquisa
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text("Pesquise por título ou autor...") },
+                placeholder = { Text("Pesquise no banco por título ou autor...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -89,9 +93,13 @@ fun HomeScreen(navController: NavController) {
                 )
             )
 
+            // Lógica de exibição da Lista
             if (filteredBooks.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Nenhum livro encontrado.", color = Color.Gray)
+                    Text(
+                        text = if (searchQuery.isEmpty()) "Aguardando livros do banco..." else "Nenhum livro encontrado.",
+                        color = Color.Gray
+                    )
                 }
             } else {
                 BookGrid(

@@ -1,19 +1,19 @@
 package com.example.biblioteca.Navigation
 
-
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.biblioteca.Database.BookDao
 import com.example.biblioteca.ui.Telas.BookDetailScreen
 import com.example.biblioteca.ui.Telas.HomeScreen
 import com.example.biblioteca.ui.Telas.LoginScreen
 import com.example.biblioteca.ui.Telas.ReadingGoalsScreen
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(bookDao: BookDao) {
     val navController = rememberNavController()
 
     NavHost(
@@ -29,7 +29,7 @@ fun AppNavigation() {
         }
 
         composable(Routes.HOME) {
-            HomeScreen(navController = navController)
+            HomeScreen(navController = navController, bookDao = bookDao)
         }
 
         composable(

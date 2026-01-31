@@ -2,7 +2,6 @@ package com.example.biblioteca.ui.Telas
 
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -16,11 +15,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.biblioteca.Model.BookModel
+import com.example.biblioteca.Model.Book
 
 
 @Composable
-fun BookCard(book: BookModel, modifier: Modifier) {
+fun BookCard(book: Book, modifier: Modifier) {
     Column(
         modifier = modifier // Agora o clique passado pelo Grid funciona!
             .padding(8.dp)

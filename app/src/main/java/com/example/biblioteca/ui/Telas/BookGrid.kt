@@ -11,13 +11,13 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.biblioteca.Model.BookModel
+import com.example.biblioteca.Model.Book
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BookGrid(
-    books: List<BookModel>,
-    onBookClick: (BookModel) -> Unit
+    books: List<Book>,
+    onBookClick: (Book) -> Unit
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
