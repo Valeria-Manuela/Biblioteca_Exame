@@ -25,7 +25,7 @@ import com.example.biblioteca.ViewModel.GoalsViewModelFactory
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReadingGoalsScreen(
-    goalDao: GoalDao, // Recebido via Navigation
+    goalDao: GoalDao,
     onBackClick: () -> Unit
 ) {
     val viewModel: GoalsViewModel = viewModel(factory = GoalsViewModelFactory(goalDao))

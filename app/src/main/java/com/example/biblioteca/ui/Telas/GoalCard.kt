@@ -26,7 +26,7 @@ import com.example.biblioteca.Model.ReadingGoal
 
 @Composable
 fun GoalCard(
-    goal: ReadingGoal,
+    goal: ReadingGoal, // Ou GoalEntity, dependendo de qual você passa na lista
     onToggle: () -> Unit,
     onDelete: () -> Unit,
     onEditClick: () -> Unit
@@ -35,26 +35,30 @@ fun GoalCard(
         elevation = CardDefaults.cardElevation(4.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (goal.isCompleted) Color(0xFFE8F5E9) else Color.White
+            containerColor = if (goal.completed) Color(0xFFE8F5E9) else Color.White
         ),
-        onClick = onEditClick,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        onClick = onEditClick
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Checkbox(checked = goal.isCompleted, onCheckedChange = { onToggle() })
+            Checkbox(checked = goal.completed, onCheckedChange = { onToggle() })
 
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                 Text(
-                    text = goal.title,
+                    text = goal.description,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    textDecoration = if (goal.isCompleted) TextDecoration.LineThrough else null,
-                    color = if (goal.isCompleted) Color.Gray else Color.Black
+                    textDecoration = if (goal.completed) TextDecoration.LineThrough else null,
+                    color = if (goal.completed) Color.Gray else Color.Black
                 )
-                Text(text = "Criado em: ${goal.createdAt}", fontSize = 12.sp, color = Color.Gray)
+                Text(
+                    text = "Criado em: ${goal.createdAt}",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
             }
 
             IconButton(onClick = onDelete) {

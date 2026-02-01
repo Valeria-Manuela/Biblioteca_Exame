@@ -69,6 +69,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 }
             } catch (e: Exception) {
                 errorMessage = "Erro ao tentar fazer login."
+                e.printStackTrace()
             }
         }
     }

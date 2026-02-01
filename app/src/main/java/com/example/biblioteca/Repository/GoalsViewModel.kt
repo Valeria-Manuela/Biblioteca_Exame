@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 
 class GoalsViewModel(private val goalDao: GoalDao) : ViewModel() {
 
@@ -21,43 +22,43 @@ class GoalsViewModel(private val goalDao: GoalDao) : ViewModel() {
             initialValue = emptyList()
         )
 
-    init {
-        refreshGoalsFromApi()
-    }
+    init { refreshGoalsFromApi() }
 
     private fun refreshGoalsFromApi() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = RetrofitClient.instance.getGoals()
                 goalDao.insertGoals(response.map { it.toEntity() })
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
     fun addGoal(title: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                val newGoal = GoalEntity(description = title)
-                goalDao.insertGoal(newGoal)
-                RetrofitClient.instance.createGoal(newGoal.toModel())
+                val tempModel = ReadingGoal(id = null, description = title, completed = false)
+                val savedGoal = RetrofitClient.instance.createGoal(tempModel)
+                goalDao.insertGoal(savedGoal.toEntity())
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
     fun toggleGoalCompletion(goal: GoalEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updated = goal.copy(isCompleted = !goal.isCompleted)
+
+            goalDao.updateGoal(updated)
+
             try {
-                val updated = goal.copy(isCompleted = !goal.isCompleted)
-                goalDao.updateGoal(updated)
                 RetrofitClient.instance.updateGoal(updated.id.toString(), updated.toModel())
-            } catch (e: Exception) { e.printStackTrace() }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                goalDao.updateGoal(goal)
+            }
         }
     }
-
     fun updateGoal(goal: GoalEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 goalDao.updateGoal(goal)
                 RetrofitClient.instance.updateGoal(goal.id.toString(), goal.toModel())
@@ -66,27 +67,27 @@ class GoalsViewModel(private val goalDao: GoalDao) : ViewModel() {
     }
 
     fun deleteGoal(goal: GoalEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                goalDao.deleteGoal(goal)
                 RetrofitClient.instance.deleteGoal(goal.id.toString())
+                goalDao.deleteGoal(goal)
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
 }
 
 fun ReadingGoal.toEntity() = GoalEntity(
-    id = this.id.toIntOrNull() ?: 0,
-    description = this.title,
-    isCompleted = this.isCompleted
+    id = this.id?.toInt() ?: 0,
+    description = this.description,
+    isCompleted = this.completed
 )
 
 fun GoalEntity.toModel() = ReadingGoal(
-    id = this.id.toString(),
-    title = this.description,
-    isCompleted = this.isCompleted
+    id = if (this.id == 0) null else this.id.toLong(),
+    description = this.description,
+    completed = this.isCompleted,
+    createdAt = ""
 )
-
 class GoalsViewModelFactory(private val goalDao: GoalDao) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(GoalsViewModel::class.java)) {
