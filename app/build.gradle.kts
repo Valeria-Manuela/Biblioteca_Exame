@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.example.biblioteca"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.biblioteca"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -30,13 +30,31 @@ android {
         }
     }
 
+
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    packaging {
+        resources {
+            excludes += "META-INF/io.netty.versions.properties"
+
+            excludes += "META-INF/INDEX.LIST"
+
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE*"
+            excludes += "META-INF/NOTICE*"
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "21"
+    }
+    kotlin {
+        jvmToolchain(21)
     }
 
     buildFeatures {
@@ -55,6 +73,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.coil.compose.v250)
 
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
@@ -65,6 +84,7 @@ dependencies {
     // ROOM
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.firebase.appdistribution.gradle)
     ksp(libs.androidx.room.compiler)
 
     // Imagens

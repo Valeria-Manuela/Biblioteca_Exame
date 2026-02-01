@@ -1,118 +1,159 @@
 package com.example.biblioteca.ui.Telas
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.biblioteca.ViewModel.AuthViewModel
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit = {}
+    viewModel: AuthViewModel,
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
+    val phone = viewModel.phone
+    val password = viewModel.password
+    val errorMessage = viewModel.errorMessage
 
-    var phone by remember { mutableStateOf("+2449") }
-    var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
-
-    val phoneRegex = Regex("^\\+2449\\d{8}$")
-
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFFFFFFFF), Color(0xFFF2F2F7))
+                )
+            )
     ) {
-
-        Text(
-            text = "Biblioteca Digital",
-            fontSize = 26.sp,
-            color = Color.Black
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        OutlinedTextField(
-            value = phone,
-            onValueChange = {
-                if (it.length <= 13) phone = it
-            },
-            label = { Text("Número de telefone", color = Color.Black) },
-            placeholder = { Text("+2449xxxxxxxx", color = Color.Black) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            isError = phone.isNotEmpty() && !phoneRegex.matches(phone),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Black,
-                unfocusedBorderColor = Color.Black,
-                cursorColor = Color.Black
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Senha", color = Color.Black) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation = PasswordVisualTransformation(),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Black,
-                unfocusedBorderColor = Color.Black,
-                cursorColor = Color.Black
-            )
-        )
-
-        if (errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = errorMessage,
-                color = Color.Red,
-                fontSize = 14.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = {
-                when {
-                    !phoneRegex.matches(phone) ->
-                        errorMessage = "Número inválido. Use +2449xxxxxxxx"
-
-                    password.length < 6 ->
-                        errorMessage = "A senha deve ter pelo menos 6 caracteres"
-
-                    else -> {
-                        errorMessage = ""
-                        onLoginSuccess()
-                    }
-                }
-            },
-            shape = RoundedCornerShape(12.dp),
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
+                .fillMaxSize()
+                .padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Entrar", color = Color.White, fontSize = 16.sp)
+            Text(
+                text = "📚",
+                fontSize = 64.sp,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            Text(
+                text = "Biblioteca",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.ExtraLight,
+                letterSpacing = 2.sp,
+                color = Color(0xFF1C1C1E)
+            )
+
+            Text(
+                text = "Bem-vindo de volta",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color(0xFF8E8E93),
+                letterSpacing = 1.sp
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { if (it.length <= 13) viewModel.phone = it },
+                placeholder = { Text("Telefone", color = Color(0xFFC7C7CC)) },
+                leadingIcon = { Icon(Icons.Rounded.Phone, contentDescription = null, tint = Color(0xFF007AFF)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedBorderColor = Color(0xFF007AFF),
+                    unfocusedBorderColor = Color(0xFFE5E5EA)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { viewModel.password = it },
+                placeholder = { Text("Senha", color = Color(0xFFC7C7CC)) },
+                leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null, tint = Color(0xFF007AFF)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedBorderColor = Color(0xFF007AFF),
+                    unfocusedBorderColor = Color(0xFFE5E5EA)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = Color(0xFFFF3B30),
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(top = 12.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = { viewModel.login { onLoginSuccess() } },
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF)),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) {
+                Text(
+                    text = "Continuar",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.clickable { onNavigateToRegister() },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Não tem uma conta? ",
+                    color = Color(0xFF8E8E93),
+                    fontSize = 15.sp
+                )
+                Text(
+                    text = "Criar agora",
+                    color = Color(0xFF007AFF),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }

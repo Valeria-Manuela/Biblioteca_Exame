@@ -1,35 +1,69 @@
 package com.example.biblioteca.Navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.biblioteca.Database.BookDao
-import com.example.biblioteca.ui.Telas.BookDetailScreen
-import com.example.biblioteca.ui.Telas.HomeScreen
-import com.example.biblioteca.ui.Telas.LoginScreen
-import com.example.biblioteca.ui.Telas.ReadingGoalsScreen
+import com.example.biblioteca.Database.GoalDao
+import com.example.biblioteca.Database.UserDao
+import com.example.biblioteca.ViewModel.AuthViewModel
+import com.example.biblioteca.ui.Telas.*
 
 @Composable
-fun AppNavigation(bookDao: BookDao) {
+fun AppNavigation(
+    bookDao: BookDao,
+    goalDao: GoalDao,
+    userDao: UserDao
+) {
     val navController = rememberNavController()
+
+    val authViewModel: AuthViewModel = viewModel()
 
     NavHost(
         navController = navController,
-        startDestination = Routes.LOGIN
+        startDestination = Routes.SPLASH
     ) {
-        composable(Routes.LOGIN) {
-            LoginScreen(onLoginSuccess = {
-                navController.navigate(Routes.HOME) {
-                    popUpTo(Routes.LOGIN) { inclusive = true }
-                }
-            })
+        // 1. Tela de Splash
+        composable(Routes.SPLASH) {
+            SplashScreen(navController)
         }
 
+        composable(Routes.LOGIN) {
+            LoginScreen(
+                viewModel = authViewModel,
+                onLoginSuccess = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                },
+                onNavigateToRegister = {
+                    navController.navigate(Routes.REGISTER)
+                }
+            )
+        }
+
+        composable(Routes.REGISTER) {
+            RegisterScreen(
+                viewModel = authViewModel,
+                onRegisterSuccess = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.REGISTER) { inclusive = true }
+                    }
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // 4. Home (Livros vindos do Room/API)
         composable(Routes.HOME) {
-            HomeScreen(navController = navController, bookDao = bookDao)
+            HomeScreen(
+                navController = navController,
+                bookDao = bookDao
+            )
         }
 
         composable(
@@ -51,6 +85,7 @@ fun AppNavigation(bookDao: BookDao) {
 
         composable("reading_goals") {
             ReadingGoalsScreen(
+                goalDao = goalDao,
                 onBackClick = { navController.popBackStack() }
             )
         }

@@ -1,75 +1,98 @@
-package com.example.biblioteca.Repository
+package com.example.biblioteca.ViewModel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.biblioteca.Database.GoalDao
+import com.example.biblioteca.Database.GoalEntity
 import com.example.biblioteca.Model.ReadingGoal
 import com.example.biblioteca.Network.RetrofitClient
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class GoalsViewModel : ViewModel() {
-    private val _goals = mutableStateListOf<ReadingGoal>()
-    val goals: List<ReadingGoal> get() = _goals
+class GoalsViewModel(private val goalDao: GoalDao) : ViewModel() {
+
+    val goals: StateFlow<List<GoalEntity>> = goalDao.getAllGoals()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     init {
-        loadGoals()
+        refreshGoalsFromApi()
     }
 
-    private fun loadGoals() {
+    private fun refreshGoalsFromApi() {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.instance.getGoals()
-                _goals.clear()
-                _goals.addAll(response)
-            } catch (e: Exception) { e.printStackTrace() }
+                goalDao.insertGoals(response.map { it.toEntity() })
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun addGoal(title: String) {
         viewModelScope.launch {
             try {
-                // Criamos o objeto (o Model já gera ID e Data por padrão agora)
-                val newGoal = ReadingGoal(title = title)
-                val savedGoal = RetrofitClient.instance.createGoal(newGoal)
-                _goals.add(0, savedGoal)
+                val newGoal = GoalEntity(description = title)
+                goalDao.insertGoal(newGoal)
+                RetrofitClient.instance.createGoal(newGoal.toModel())
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
-    // NOVA FUNÇÃO: Atualiza o TÍTULO da meta
-    fun updateGoalTitle(id: String, newTitle: String) {
-        viewModelScope.launch {
-            try {
-                val goalOriginal = _goals.find { it.id == id }
-                goalOriginal?.let {
-                    val updatedGoal = it.copy(title = newTitle)
-                    val response = RetrofitClient.instance.createGoal(updatedGoal)
-
-                    val index = _goals.indexOfFirst { it.id == id }
-                    if (index != -1) _goals[index] = response
-                }
-            } catch (e: Exception) { e.printStackTrace() }
-        }
-    }
-
-    fun updateGoalStatus(goal: ReadingGoal) {
+    fun toggleGoalCompletion(goal: GoalEntity) {
         viewModelScope.launch {
             try {
                 val updated = goal.copy(isCompleted = !goal.isCompleted)
-                val response = RetrofitClient.instance.createGoal(updated)
-
-                val index = _goals.indexOfFirst { it.id == goal.id }
-                if (index != -1) _goals[index] = response
+                goalDao.updateGoal(updated)
+                RetrofitClient.instance.updateGoal(updated.id.toString(), updated.toModel())
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
-    fun deleteGoal(goal: ReadingGoal) {
+    fun updateGoal(goal: GoalEntity) {
         viewModelScope.launch {
             try {
-                RetrofitClient.instance.deleteGoal(goal.id)
-                _goals.remove(goal)
+                goalDao.updateGoal(goal)
+                RetrofitClient.instance.updateGoal(goal.id.toString(), goal.toModel())
             } catch (e: Exception) { e.printStackTrace() }
         }
+    }
+
+    fun deleteGoal(goal: GoalEntity) {
+        viewModelScope.launch {
+            try {
+                goalDao.deleteGoal(goal)
+                RetrofitClient.instance.deleteGoal(goal.id.toString())
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+}
+
+fun ReadingGoal.toEntity() = GoalEntity(
+    id = this.id.toIntOrNull() ?: 0,
+    description = this.title,
+    isCompleted = this.isCompleted
+)
+
+fun GoalEntity.toModel() = ReadingGoal(
+    id = this.id.toString(),
+    title = this.description,
+    isCompleted = this.isCompleted
+)
+
+class GoalsViewModelFactory(private val goalDao: GoalDao) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(GoalsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return GoalsViewModel(goalDao) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

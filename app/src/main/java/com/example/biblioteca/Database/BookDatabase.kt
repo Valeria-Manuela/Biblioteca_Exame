@@ -2,14 +2,6 @@ package com.example.biblioteca.Database
 
 import androidx.room.*
 
-@Entity(tableName = "books")
-data class BookEntity(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val title: String,
-    val author: String,
-    val coverUrl: String,
-    val description: String
-)
 
 @Dao
 interface BookDao {
@@ -29,14 +21,5 @@ interface BookDao {
     suspend fun clearAll()
 }
 
-@Database(entities = [BookEntity::class], version = 1, exportSchema = false) // Adicione aqui
-abstract class AppDatabase : RoomDatabase() {
-    abstract fun bookDao(): BookDao
-}
 
-fun BookEntity.toModel() = com.example.biblioteca.Model.Book(
-    title = this.title,
-    author = this.author,
-    coverUrl = this.coverUrl,
-    description = this.description
-)
+

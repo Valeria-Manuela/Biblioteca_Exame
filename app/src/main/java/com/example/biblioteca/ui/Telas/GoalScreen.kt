@@ -1,12 +1,13 @@
 package com.example.biblioteca.ui.Telas
 
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,22 +17,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.biblioteca.Repository.GoalsViewModel
+import com.example.biblioteca.Database.GoalDao
+import com.example.biblioteca.Database.GoalEntity
+import com.example.biblioteca.ViewModel.GoalsViewModel
+import com.example.biblioteca.ViewModel.GoalsViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReadingGoalsScreen(
-    onBackClick: () -> Unit,
-    viewModel: GoalsViewModel = viewModel()
+    goalDao: GoalDao, // Recebido via Navigation
+    onBackClick: () -> Unit
 ) {
+    val viewModel: GoalsViewModel = viewModel(factory = GoalsViewModelFactory(goalDao))
+
+    val goals by viewModel.goals.collectAsState()
+
     var showDialog by remember { mutableStateOf(false) }
     var goalTitleText by remember { mutableStateOf("") }
-    var editingGoalId by remember { mutableStateOf<String?>(null) }
+    var editingGoal: GoalEntity? by remember { mutableStateOf(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Minhas Metas") },
+                title = { Text("Minhas Metas de Leitura") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
@@ -42,7 +50,7 @@ fun ReadingGoalsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    editingGoalId = null
+                    editingGoal = null
                     goalTitleText = ""
                     showDialog = true
                 },
@@ -53,18 +61,22 @@ fun ReadingGoalsScreen(
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize()) {
-            if (viewModel.goals.isEmpty()) {
-                Text("Nenhuma meta definida.", modifier = Modifier.align(Alignment.Center), color = Color.Gray)
+            if (goals.isEmpty()) {
+                Text(
+                    "Nenhuma meta definida no banco de dados.",
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color.Gray
+                )
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(viewModel.goals, key = { it.id }) { goal ->
+                    items(goals, key = { it.id }) { goal ->
                         GoalCard(
                             goal = goal,
-                            onToggle = { viewModel.updateGoalStatus(goal) },
+                            onToggle = { viewModel.toggleGoalCompletion(goal) },
                             onDelete = { viewModel.deleteGoal(goal) },
                             onEditClick = {
-                                goalTitleText = goal.title
-                                editingGoalId = goal.id
+                                goalTitleText = goal.description
+                                editingGoal = goal
                                 showDialog = true
                             }
                         )
@@ -77,21 +89,24 @@ fun ReadingGoalsScreen(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text(if (editingGoalId == null) "Nova Meta" else "Editar Meta") },
+            title = { Text(if (editingGoal == null) "Nova Meta" else "Editar Meta") },
             text = {
                 OutlinedTextField(
                     value = goalTitleText,
                     onValueChange = { goalTitleText = it },
-                    label = { Text("Título da meta") },
-                    singleLine = true
+                    label = { Text("O que você pretende ler?") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
                 Button(onClick = {
                     if (goalTitleText.isNotBlank()) {
-                        editingGoalId?.let {
-                            viewModel.updateGoalTitle(it, goalTitleText)
-                        } ?: viewModel.addGoal(goalTitleText)
+                        if (editingGoal == null) {
+                            viewModel.addGoal(goalTitleText)
+                        } else {
+                            viewModel.updateGoal(editingGoal!!.copy(description = goalTitleText))
+                        }
                         showDialog = false
                     }
                 }) { Text("Salvar") }
@@ -100,5 +115,42 @@ fun ReadingGoalsScreen(
                 TextButton(onClick = { showDialog = false }) { Text("Cancelar") }
             }
         )
+    }
+}
+
+@Composable
+fun GoalCard(
+    goal: GoalEntity,
+    onToggle: () -> Unit,
+    onDelete: () -> Unit,
+    onEditClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(checked = goal.isCompleted, onCheckedChange = { onToggle() })
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = goal.description,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    textDecoration = if (goal.isCompleted) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
+                )
+            }
+
+            IconButton(onClick = onEditClick) {
+                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.Gray)
+            }
+
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Excluir", tint = Color.Red)
+            }
+        }
     }
 }
