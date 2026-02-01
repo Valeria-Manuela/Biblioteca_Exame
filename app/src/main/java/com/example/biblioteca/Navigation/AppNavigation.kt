@@ -12,6 +12,7 @@ import com.example.biblioteca.Database.GoalDao
 import com.example.biblioteca.Database.UserDao
 import com.example.biblioteca.ViewModel.AuthViewModel
 import com.example.biblioteca.ui.Telas.*
+import java.net.URLDecoder
 
 @Composable
 fun AppNavigation(
@@ -27,7 +28,6 @@ fun AppNavigation(
         navController = navController,
         startDestination = Routes.SPLASH
     ) {
-        // 1. Tela de Splash
         composable(Routes.SPLASH) {
             SplashScreen(navController)
         }
@@ -58,7 +58,6 @@ fun AppNavigation(
             )
         }
 
-        // 4. Home (Livros vindos do Room/API)
         composable(Routes.HOME) {
             HomeScreen(
                 navController = navController,
@@ -67,18 +66,21 @@ fun AppNavigation(
         }
 
         composable(
-            route = "book_details/{bookTitle}/{bookCover}",
+            route = "book_details/{bookTitle}/{bookCover}/{bookDesc}",
             arguments = listOf(
                 navArgument("bookTitle") { type = NavType.StringType },
-                navArgument("bookCover") { type = NavType.StringType }
+                navArgument("bookCover") { type = NavType.StringType },
+                navArgument("bookDesc") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val title = backStackEntry.arguments?.getString("bookTitle") ?: ""
             val cover = backStackEntry.arguments?.getString("bookCover") ?: ""
+            val desc = backStackEntry.arguments?.getString("bookDesc") ?: ""
 
             BookDetailScreen(
-                bookTitle = java.net.URLDecoder.decode(title, "UTF-8"),
-                bookCoverUrl = java.net.URLDecoder.decode(cover, "UTF-8"),
+                bookTitle = URLDecoder.decode(title, "UTF-8"),
+                bookCoverUrl = URLDecoder.decode(cover, "UTF-8"),
+                bookDescription = URLDecoder.decode(desc, "UTF-8"),
                 onBackClick = { navController.popBackStack() }
             )
         }

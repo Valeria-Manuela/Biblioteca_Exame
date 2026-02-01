@@ -1,24 +1,11 @@
 package com.example.biblioteca.ui.Telas
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +14,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,12 +22,13 @@ import coil.compose.AsyncImage
 fun BookDetailScreen(
     bookTitle: String,
     bookCoverUrl: String,
+    bookDescription: String,
     onBackClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detalhes") },
+                title = { Text("Detalhes do Livro") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
@@ -52,10 +41,10 @@ fun BookDetailScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(16.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Capa do Livro Real
             Card(
                 elevation = CardDefaults.cardElevation(8.dp),
                 modifier = Modifier.size(200.dp, 300.dp)
@@ -64,7 +53,7 @@ fun BookDetailScreen(
                     model = bookCoverUrl,
                     contentDescription = "Capa do livro $bookTitle",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop // Faz a imagem preencher o card
+                    contentScale = ContentScale.Crop
                 )
             }
 
@@ -74,9 +63,30 @@ fun BookDetailScreen(
                 text = bookTitle,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = Color(0xFF1C1C1E)
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Sinopse",
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = bookDescription,
+                style = MaterialTheme.typography.bodyLarge,
+                lineHeight = 24.sp,
+                textAlign = TextAlign.Justify,
+                color = Color(0xFF3A3A3C),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

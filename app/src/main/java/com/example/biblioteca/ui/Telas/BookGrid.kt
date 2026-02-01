@@ -27,13 +27,9 @@ fun BookGrid(
         items(books) { book ->
             BookCard(
                 book = book,
+                // O clique no Card chama o onBookClick que definimos na HomeScreen
                 modifier = Modifier.clickable { onBookClick(book) }
             )
         }
     }
 }
-
-
-
-
-

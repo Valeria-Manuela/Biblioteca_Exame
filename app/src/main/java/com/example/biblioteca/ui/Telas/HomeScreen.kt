@@ -111,7 +111,9 @@ fun HomeScreen(navController: NavController, bookDao: BookDao) {
                     onBookClick = { book ->
                         val encodedTitle = java.net.URLEncoder.encode(book.title, "UTF-8")
                         val encodedUrl = java.net.URLEncoder.encode(book.coverUrl.ifEmpty { "https://via.placeholder.com/150" }, "UTF-8")
-                        navController.navigate("book_details/$encodedTitle/$encodedUrl")
+                        val encodedDesc = java.net.URLEncoder.encode(book.description.ifEmpty { "Sem descrição disponível." }, "UTF-8")
+
+                        navController.navigate("book_details/$encodedTitle/$encodedUrl/$encodedDesc")
                     }
                 )
             }

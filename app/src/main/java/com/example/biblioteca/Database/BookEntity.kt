@@ -16,6 +16,7 @@ data class BookEntity(
 )
 
 fun BookEntity.toModel() = Book(
+    id = this.id,
     title = this.title,
     author = this.author,
     coverUrl = this.coverUrl,
